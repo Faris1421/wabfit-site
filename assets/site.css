@@ -1,0 +1,303 @@
+/*
+ * wabfit.com — one stylesheet, five pages.
+ *
+ * The palette is not a new one. It is the app's own `sand` theme, token for
+ * token, out of `src/theme/tokens.ts`: the cream ground, the warm browns it
+ * writes in, and the amber it acts in. A site that invented its own colours
+ * would be a second brand for the same product, and the first thing a person
+ * does after installing is come here.
+ *
+ * The dark variant is the one thing that is not lifted directly. The app's dark
+ * theme is iOS greys with a blue accent, and pairing that with the amber above
+ * would put two identities on one domain — so the dark here is the SAND theme
+ * after dark: warm near-blacks, the same cream for text, the same amber lifted
+ * enough to hold on it.
+ *
+ * No framework and no build step. Cloudflare Pages serves this directory as it
+ * stands, which is also what makes it deployable by somebody holding a phone.
+ */
+
+@font-face {
+  font-family: 'Thmanyah Sans';
+  src: url('./fonts/sans-400.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Thmanyah Sans';
+  src: url('./fonts/sans-700.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Thmanyah Sans';
+  src: url('./fonts/sans-900.woff2') format('woff2');
+  font-weight: 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Thmanyah Display';
+  src: url('./fonts/display-700.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: light dark;
+
+  --bg: #f4f0e7;
+  --surface: #fffdf8;
+  --surface2: #ede7d9;
+  --text: #1a150e;
+  --muted: rgba(56, 48, 34, 0.72);
+  --faint: rgba(56, 48, 34, 0.46);
+  --line: rgba(94, 82, 58, 0.22);
+  --accent: #b45309;
+  --accent-text: #96450a;
+  --on-accent: #fffdf8;
+
+  --sans: 'Thmanyah Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, Arial, sans-serif;
+  --display: 'Thmanyah Display', Georgia, 'Times New Roman', serif;
+}
+
+/*
+ * Guarded as `:not([data-theme="light"])` so an explicit choice beats the OS,
+ * and every colour below is a REDEFINITION of a token declared above — never
+ * the only place a colour is defined, which is how a page ends up painting one
+ * theme's text on the other theme's ground.
+ */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #14110c;
+    --surface: #1d1912;
+    --surface2: #262117;
+    --text: #f4f0e7;
+    --muted: rgba(244, 240, 231, 0.68);
+    --faint: rgba(244, 240, 231, 0.42);
+    --line: rgba(244, 240, 231, 0.14);
+    --accent: #d97706;
+    --accent-text: #e9a23b;
+    --on-accent: #14110c;
+  }
+}
+
+:root[data-theme='dark'] {
+  --bg: #14110c;
+  --surface: #1d1912;
+  --surface2: #262117;
+  --text: #f4f0e7;
+  --muted: rgba(244, 240, 231, 0.68);
+  --faint: rgba(244, 240, 231, 0.42);
+  --line: rgba(244, 240, 231, 0.14);
+  --accent: #d97706;
+  --accent-text: #e9a23b;
+  --on-accent: #14110c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 16.5px;
+  line-height: 1.85;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap {
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: 0 20px 72px;
+}
+
+/* ── the bar ─────────────────────────────────────────────────────────────── */
+
+header.bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 22px 0 26px;
+}
+
+header.bar img {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: block;
+}
+
+header.bar .name {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 21px;
+  letter-spacing: 0.01em;
+  /* The brand is Latin inside an Arabic page, always. */
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+header.bar nav {
+  margin-inline-start: auto;
+  display: flex;
+  gap: 16px;
+  font-size: 14px;
+}
+
+header.bar nav a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+header.bar nav a:hover,
+header.bar nav a:focus-visible {
+  color: var(--accent-text);
+}
+
+/* ── type ────────────────────────────────────────────────────────────────── */
+
+h1 {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: clamp(30px, 6vw, 40px);
+  line-height: 1.4;
+  margin: 8px 0 14px;
+  text-wrap: balance;
+}
+
+h2 {
+  font-size: 19px;
+  font-weight: 900;
+  margin: 42px 0 10px;
+  line-height: 1.6;
+}
+
+h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 26px 0 6px;
+  color: var(--accent-text);
+}
+
+p {
+  margin: 0 0 14px;
+  color: var(--muted);
+}
+
+.lead {
+  font-size: 18.5px;
+  color: var(--text);
+  margin-bottom: 26px;
+}
+
+a {
+  color: var(--accent-text);
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9em;
+  background: var(--surface2);
+  padding: 1px 6px;
+  border-radius: 6px;
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+/* ── surfaces ────────────────────────────────────────────────────────────── */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 22px 22px 8px;
+  margin: 22px 0;
+}
+
+.card h2:first-child,
+.card h3:first-child {
+  margin-top: 0;
+}
+
+.grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  margin: 26px 0;
+}
+
+.grid .card {
+  margin: 0;
+  padding: 20px 20px 6px;
+}
+
+.grid h3 {
+  margin-top: 0;
+}
+
+/* ── the English half ────────────────────────────────────────────────────── */
+
+.en {
+  direction: ltr;
+  text-align: left;
+  border-top: 1px solid var(--line);
+  margin-top: 56px;
+  padding-top: 34px;
+}
+
+.en h1 {
+  font-size: clamp(24px, 5vw, 32px);
+}
+
+/* ── foot ────────────────────────────────────────────────────────────────── */
+
+footer {
+  border-top: 1px solid var(--line);
+  margin-top: 56px;
+  padding-top: 22px;
+  font-size: 13.5px;
+  color: var(--faint);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  align-items: center;
+}
+
+footer a {
+  color: var(--faint);
+  text-decoration: none;
+}
+
+footer a:hover,
+footer a:focus-visible {
+  color: var(--accent-text);
+}
+
+footer .spacer {
+  margin-inline-start: auto;
+}
+
+.updated {
+  color: var(--faint);
+  font-size: 13.5px;
+  margin-top: -6px;
+}
