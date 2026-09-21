@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ar" dir="rtl" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<title>Wab Fit</title>
+<link rel="stylesheet" href="./app.css">
+</head>
+<body>
+<!--
+  Three bands top to bottom: the bar, the page canvases, the tools. Only the
+  middle band scrolls. Every word on screen is written by i18n.js into the
+  elements below — this file holds structure and nothing else.
+-->
+<div class="app">
+
+  <header class="bar">
+    <span class="doc-name" id="docName">—</span>
+    <span class="page-count" id="pageCount">—</span>
+    <div class="bar-actions">
+      <button type="button" class="icon-btn" id="undoBtn"></button>
+      <button type="button" class="icon-btn" id="redoBtn"></button>
+      <button type="button" class="btn primary" id="exportBtn" disabled></button>
+    </div>
+  </header>
+
+  <main class="stage" id="stage">
+    <div class="empty" id="empty">
+      <button type="button" class="btn primary big" id="openBtn"></button>
+      <button type="button" class="btn ghost" id="blankBtn"></button>
+    </div>
+    <div class="pages" id="pages" hidden></div>
+  </main>
+
+  <div class="tools">
+    <div class="props" id="props" hidden></div>
+    <div class="toolbar" id="toolbar" role="toolbar"></div>
+  </div>
+
+</div>
+
+<input type="file" id="fileInput" accept="application/pdf" hidden>
+
+<script type="module" src="./main.js"></script>
+</body>
+</html>

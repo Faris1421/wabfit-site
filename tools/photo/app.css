@@ -1,0 +1,609 @@
+/*
+ * Wab Fit — the photo editor's screen.
+ *
+ * The ground is the app's own, not the marketing site's: this page opens inside
+ * the app's WebView, and a person arriving there should not be able to tell
+ * where the app stopped and the page started. So the tokens below are
+ * `src/theme/tokens.ts` — the same background, surface, line, text, muted and
+ * accent in BOTH palettes — and dark is the one the page is born in, because
+ * that is the one a photo editor wants around a photo.
+ *
+ * Layout is logical: `margin-inline`, `inset-inline`, `padding-block`. There is
+ * no `left` or `right` in this file, so Arabic mirrors without a second
+ * stylesheet, and every tap target is at least 44px on its shortest side.
+ *
+ * The fonts are the site's own Thmanyah cuts, two directories up and over, so
+ * the page carries no webfont request off its origin.
+ */
+
+@font-face {
+  font-family: 'Thmanyah Sans';
+  src: url('../../assets/fonts/sans-400.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Thmanyah Sans';
+  src: url('../../assets/fonts/sans-700.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Thmanyah Sans';
+  src: url('../../assets/fonts/sans-900.woff2') format('woff2');
+  font-weight: 900;
+  font-display: swap;
+}
+
+/*
+ * Light first, dark second, and an explicit `data-theme` beats the OS: the page
+ * is told which theme to be by the app (or the URL), not by the device.
+ */
+:root {
+  color-scheme: light;
+
+  --bg: #f2f2f7;
+  --surface: #ffffff;
+  --surface2: #f2f2f7;
+  --line: rgba(60, 60, 67, 0.22);
+  --text: #000000;
+  --muted: rgba(60, 60, 67, 0.62);
+  --faint: rgba(60, 60, 67, 0.32);
+  --accent: #007aff;
+  --accent-text: #007aff;
+  --on-accent: #ffffff;
+  --fill: rgba(118, 118, 128, 0.12);
+  --danger: #ff3b30;
+  --danger-text: #ff3b30;
+
+  --r-xs: 7px;
+  --r-sm: 9px;
+  --r-md: 12px;
+  --r-lg: 14px;
+  --r-xl: 16px;
+  --r-xxl: 20px;
+
+  --s-xs: 4px;
+  --s-sm: 8px;
+  --s-md: 12px;
+  --s-lg: 16px;
+  --s-xl: 20px;
+
+  --sans: 'Thmanyah Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, Arial, sans-serif;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #000000;
+  --surface: #1c1c1e;
+  --surface2: #2c2c2e;
+  --line: rgba(84, 84, 88, 0.62);
+  --text: #ffffff;
+  --muted: rgba(235, 235, 245, 0.62);
+  --faint: rgba(235, 235, 245, 0.32);
+  --accent: #0a84ff;
+  --accent-text: #0a84ff;
+  --on-accent: #ffffff;
+  --fill: rgba(118, 118, 128, 0.24);
+  --danger: #ff453a;
+  --danger-text: #ff453a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+
+button {
+  font-family: inherit;
+  color: inherit;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* ── the three bands ─────────────────────────────────────────────────────── */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+/* ── the bar ─────────────────────────────────────────────────────────────── */
+
+.bar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--s-sm);
+  padding: var(--s-sm) var(--s-md);
+  padding-block-start: calc(env(safe-area-inset-top, 0px) + var(--s-sm));
+  background: var(--surface);
+  border-block-end: 1px solid var(--line);
+}
+
+/* The actions sit at the inline end of the bar, so they follow the language. */
+.bar-actions {
+  margin-inline-start: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--s-xs);
+}
+
+.icon-btn,
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 44px is the smallest a finger is asked to hit. */
+.icon-btn {
+  width: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: var(--r-md);
+  color: var(--accent-text);
+}
+
+.icon-btn svg {
+  width: 22px;
+  height: 22px;
+}
+
+.icon-btn:disabled {
+  color: var(--faint);
+  cursor: default;
+}
+
+.icon-btn[aria-pressed='true'] {
+  background: var(--fill);
+}
+
+.btn {
+  min-height: 44px;
+  padding-inline: var(--s-lg);
+  border-radius: var(--r-md);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.btn.primary {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.btn.primary:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.btn.big {
+  min-height: 52px;
+  padding-inline: var(--s-xl);
+  border-radius: var(--r-xl);
+  font-size: 17px;
+}
+
+/* ── the canvas area ─────────────────────────────────────────────────────── */
+
+/*
+ * One photo, centred, with the ground's own colour around it. The canvas is the
+ * pipeline's to draw into and carries no styling of its own beyond being kept
+ * inside the band; main.js only decides whether it or the empty state is on
+ * screen.
+ */
+.stage {
+  flex: 1 1 auto;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  padding: var(--s-md);
+  overflow: hidden;
+}
+
+.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.view {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+/* The one line the page says when something fails. It floats over the stage so
+   it never moves the photo or the empty state, wherever it is appended. */
+.view-error {
+  position: absolute;
+  inset-inline: var(--s-md);
+  inset-block-end: var(--s-lg);
+  margin: 0;
+  color: var(--danger-text);
+  font-size: 14px;
+  text-align: center;
+}
+
+/*
+ * The crop frame's own canvas: it covers the stage while Crop is the chosen
+ * tool, and it follows a finger without the page scrolling underneath it.
+ */
+.crop-view {
+  position: absolute;
+  inset: var(--s-md);
+  margin: auto;
+  touch-action: none;
+}
+
+/*
+ * The erase tool's own canvas: it covers the stage while Erase is the chosen
+ * tool, carries the painted mask over the picture, and follows a finger without
+ * the page scrolling underneath it.
+ */
+.erase-view {
+  position: absolute;
+  inset: var(--s-md);
+  margin: auto;
+  touch-action: none;
+}
+
+/* The bar that counts the removal model down: determinate while its bytes stream
+   in, indeterminate while the inpainting itself runs. */
+.erase-bar {
+  block-size: 6px;
+  accent-color: var(--accent);
+  margin-inline: var(--s-md);
+}
+
+/*
+ * The face tool's own canvas: like the erase overlay, it covers the stage while
+ * Face is the chosen tool, and the warped picture is drawn straight into it.
+ */
+.face-view {
+  position: absolute;
+  inset: var(--s-md);
+  margin: auto;
+  touch-action: none;
+}
+
+/* One face dial: its word over its slider, in a strip that scrolls sideways. */
+.face-cell {
+  flex: 0 0 auto;
+  width: 128px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-inline: var(--s-xs);
+}
+
+.face-cell label {
+  font-size: 12px;
+  line-height: 1.3;
+  color: var(--muted);
+}
+
+/* The same count, for the landmark model the face and swap tools open with and
+   for the two models the background tool opens with. */
+.face-bar,
+.swap-bar,
+.bg-bar {
+  block-size: 6px;
+  accent-color: var(--accent);
+  margin-inline: var(--s-md);
+}
+
+/*
+ * The swap tool's own canvas: the stage's box, holding the one composited picture
+ * the tool is about to hand over, so the person sees the face on before Apply
+ * makes it the photo.
+ */
+.swap-view {
+  position: absolute;
+  inset: var(--s-md);
+  margin: auto;
+  touch-action: none;
+}
+
+/* One ground of the background tool, drawn as the colour it is. */
+.bg-swatch {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bg-swatch[aria-pressed='true'] {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* The picker behind the custom ground: as tall as a swatch, and as wide. */
+.bg-custom {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: none;
+}
+
+/* ── the tool bar ────────────────────────────────────────────────────────── */
+
+.tools {
+  flex: 0 0 auto;
+  background: var(--surface);
+  border-block-start: 1px solid var(--line);
+  padding-block-end: env(safe-area-inset-bottom, 0px);
+}
+
+.toolbar {
+  display: flex;
+  align-items: stretch;
+  gap: var(--s-xs);
+  padding: var(--s-xs) var(--s-sm);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.toolbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* An icon over one word. The band scrolls sideways rather than wrapping, so
+   seven tools stay one row on a 390px phone. */
+.tool {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 56px;
+  min-height: 56px;
+  padding: var(--s-xs) var(--s-sm);
+  border: 0;
+  border-radius: var(--r-lg);
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tool svg {
+  width: 24px;
+  height: 24px;
+}
+
+.tool-label {
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.tool[aria-pressed='true'] {
+  background: var(--fill);
+  color: var(--accent-text);
+}
+
+.tool[aria-pressed='true'] .tool-label {
+  font-weight: 700;
+}
+
+/* ── the controls ────────────────────────────────────────────────────────── */
+
+/*
+ * The strip the selected tool puts its controls in: one band inside the tools
+ * band, above the tool bar, that a tool fills and empties. A row scrolls
+ * sideways rather than wrapping, so thirteen parameters stay one row on a 390px
+ * phone, and every target is at least 44px on its shortest side.
+ */
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-xs);
+  padding-block: var(--s-xs);
+  border-block-end: 1px solid var(--line);
+}
+
+.chips,
+.strip {
+  display: flex;
+  gap: var(--s-xs);
+  padding-inline: var(--s-sm);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.chips::-webkit-scrollbar,
+.strip::-webkit-scrollbar {
+  display: none;
+}
+
+/* One parameter: its drawing and its name, both on `currentColor`. */
+.chip {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding-inline: var(--s-sm);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: none;
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.chip svg {
+  width: 20px;
+  height: 20px;
+}
+
+.chip[aria-pressed='true'] {
+  background: var(--fill);
+  border-color: var(--accent);
+  color: var(--accent-text);
+  font-weight: 700;
+}
+
+/* The one slider under the row. */
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-sm);
+  padding-inline: var(--s-md);
+}
+
+.slider {
+  flex: 1 1 auto;
+  min-height: 44px;
+  accent-color: var(--accent);
+}
+
+/*
+ * A number, read left to right in both languages, in figures of one width so a
+ * value does not jiggle while it is dragged.
+ */
+.value {
+  min-width: 60px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--r-md);
+  background: var(--fill);
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  direction: ltr;
+}
+
+/* One filter: its own thumbnail over its name. Chosen is ringed in the accent. */
+.filter {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 3px 3px var(--s-xs);
+  border: 2px solid transparent;
+  border-radius: var(--r-lg);
+  background: none;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.3;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.filter canvas {
+  width: 72px;
+  height: 72px;
+  border-radius: var(--r-md);
+  background: var(--surface2);
+}
+
+.filter[aria-pressed='true'] {
+  border-color: var(--accent);
+  color: var(--accent-text);
+  font-weight: 700;
+}
+
+/* ── the export sheet ───────────────────────────────────────────────────── */
+
+/*
+ * One panel held to the bottom of the screen with its leading corners rounded,
+ * so it reads as a sheet in either language. It holds the formats, the quality,
+ * the size the file will come out at and the two buttons, and nothing else.
+ */
+.sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: var(--bg);
+}
+
+.sheet-panel {
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-md);
+  padding: var(--s-lg);
+  padding-block-end: calc(env(safe-area-inset-bottom, 0px) + var(--s-lg));
+  background: var(--surface);
+  border-block-start: 1px solid var(--line);
+  border-start-start-radius: var(--r-xxl);
+  border-start-end-radius: var(--r-xxl);
+}
+
+/* The output size in pixels, read left to right in both languages. */
+.sheet-size {
+  padding-inline: var(--s-md);
+  color: var(--muted);
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  direction: ltr;
+}
+
+/* The one line an error gets. */
+.sheet-error {
+  margin: 0;
+  padding-inline: var(--s-md);
+  color: var(--danger-text);
+  font-size: 14px;
+}
+
+.sheet-actions {
+  display: flex;
+  gap: var(--s-sm);
+}
+
+.sheet-actions .btn {
+  flex: 1 1 0;
+}
+
+

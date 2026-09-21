@@ -1,0 +1,139 @@
+/*
+ * The 3D scan viewer. One screen: a full-viewport canvas, a thin loading bar,
+ * one line of state text, one control.
+ *
+ * The colours are not invented here. They are the app's own tokens, copied
+ * value for value out of `src/theme/tokens.ts` — the background, the surface,
+ * the hairline, the label, the muted label and the accent, in BOTH palettes.
+ * The dark palette is the default; boot.js flips `data-theme` on <html>.
+ *
+ * Arabic is the page's first language, so everything is laid out logically
+ * (inline start/end), never left/right.
+ */
+
+/* ── tokens.ts: palette.dark ─────────────────────────────────────────────── */
+:root {
+  color-scheme: dark;
+
+  --bg: #000000; /* bg      */
+  --surface: #1c1c1e; /* surface */
+  --line: rgba(84, 84, 88, 0.62); /* line    */
+  --text: #ffffff; /* text    */
+  --muted: rgba(235, 235, 245, 0.62); /* muted   */
+  --accent: #0a84ff; /* accent  */
+}
+
+/* ── tokens.ts: palette.light ────────────────────────────────────────────── */
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --bg: #f2f2f7;
+  --surface: #ffffff;
+  --line: rgba(60, 60, 67, 0.22);
+  --text: #000000;
+  --muted: rgba(60, 60, 67, 0.62);
+  --accent: #007aff;
+}
+
+/* ── The app's typeface, by relative URL ─────────────────────────────────── */
+@font-face {
+  font-family: 'Thmanyah Sans';
+  src: url('../../assets/fonts/sans-400.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Thmanyah Sans';
+  src: url('../../assets/fonts/sans-700.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  background: var(--bg);
+}
+
+body {
+  color: var(--text);
+  font-family:
+    'Thmanyah Sans',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Tahoma,
+    Arial,
+    sans-serif;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* The renderer paints the model; the ground under it is the app's background. */
+#canvas {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: transparent;
+  touch-action: none;
+}
+
+/* Loading: a thin determinate bar across the top, growing from the inline
+   start (the right, in Arabic). It has no track and no label. */
+#progress {
+  position: fixed;
+  top: 0;
+  inset-inline-start: 0;
+  width: 0;
+  height: 2px;
+  background: var(--accent);
+  z-index: 2;
+}
+
+/* The one line of state text: no source, loading, or what went wrong. */
+#message {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  margin: 0;
+  padding: 0 24px;
+  text-align: center;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--muted);
+  z-index: 1;
+}
+
+/* The one control: back to the neutral camera, centred and above the home
+   indicator. 44x44 — the smallest thing a thumb can be asked to hit. */
+#reset {
+  position: fixed;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--text);
+  z-index: 3;
+}
+#reset[hidden] {
+  display: none;
+}

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ar" dir="rtl" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<title>Wab Fit</title>
+<link rel="stylesheet" href="./app.css">
+</head>
+<body>
+<!--
+  Three bands, top to bottom: the bar, the canvas area, the tools. Every word on
+  screen is written by main.js from i18n.js into the elements below, so this file
+  holds structure and nothing else — and no string at all.
+
+  The stage holds two things and only ever shows one of them: the empty state,
+  which is one button, and the canvas the pipeline draws into once a photo is
+  open. main.js decides which of the two is on screen.
+-->
+<div class="app">
+
+  <header class="bar">
+    <div class="bar-actions">
+      <button type="button" class="icon-btn" id="undoBtn"></button>
+      <button type="button" class="icon-btn" id="redoBtn"></button>
+      <button type="button" class="icon-btn" id="compareBtn" aria-pressed="false"></button>
+      <button type="button" class="btn primary" id="exportBtn"></button>
+    </div>
+  </header>
+
+  <main class="stage" id="stage">
+    <div class="empty" id="empty">
+      <button type="button" class="btn primary big" id="openBtn"></button>
+    </div>
+    <canvas class="view" id="view" hidden></canvas>
+  </main>
+
+  <div class="tools" id="tools" hidden>
+    <div class="toolbar" id="toolbar" role="toolbar"></div>
+  </div>
+
+</div>
+
+<input type="file" id="fileInput" accept="image/*" hidden>
+
+<script type="module" src="./main.js"></script>
+</body>
+</html>

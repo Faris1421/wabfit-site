@@ -1,0 +1,553 @@
+/*
+ * Wab Fit — the PDF tool's screen.
+ *
+ * The ground is the app's own, not the marketing site's: this page opens inside
+ * the app's WebView, and a person arriving there should not be able to tell
+ * where the app stopped and the page started. So the tokens below are
+ * `src/theme/tokens.ts` — the SAME background, surface, line, text, muted and
+ * accent in both themes — and the geometry follows the same ladder (radii 7 to
+ * 20, spacing 4 to 28).
+ *
+ * Layout is logical: `margin-inline`, `inset-inline`, `padding-block`. There is
+ * no `left` or `right` in this file, so Arabic mirrors without a second
+ * stylesheet. Every tap target is at least 40px on its shortest side.
+ *
+ * The fonts are the site's own Thmanyah cuts, one directory up and over, so the
+ * page carries no webfont request off its origin.
+ */
+
+@font-face {
+  font-family: 'Thmanyah Sans';
+  src: url('../../assets/fonts/sans-400.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Thmanyah Sans';
+  src: url('../../assets/fonts/sans-700.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Thmanyah Sans';
+  src: url('../../assets/fonts/sans-900.woff2') format('woff2');
+  font-weight: 900;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: light;
+
+  --bg: #f2f2f7;
+  --surface: #ffffff;
+  --surface2: #f2f2f7;
+  --line: rgba(60, 60, 67, 0.22);
+  --text: #000000;
+  --muted: rgba(60, 60, 67, 0.62);
+  --faint: rgba(60, 60, 67, 0.32);
+  --accent: #007aff;
+  --accent-text: #007aff;
+  --on-accent: #ffffff;
+  --fill: rgba(118, 118, 128, 0.12);
+  --dim: rgba(0, 0, 0, 0.45);
+  --danger-text: #ff3b30;
+
+  --r-xs: 7px;
+  --r-sm: 9px;
+  --r-md: 12px;
+  --r-lg: 14px;
+  --r-xl: 16px;
+  --r-xxl: 20px;
+
+  --s-xs: 4px;
+  --s-sm: 8px;
+  --s-md: 12px;
+  --s-lg: 16px;
+  --s-xl: 20px;
+
+  --sans: 'Thmanyah Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, Arial, sans-serif;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #000000;
+  --surface: #1c1c1e;
+  --surface2: #2c2c2e;
+  --line: rgba(84, 84, 88, 0.62);
+  --text: #ffffff;
+  --muted: rgba(235, 235, 245, 0.62);
+  --faint: rgba(235, 235, 245, 0.32);
+  --accent: #0a84ff;
+  --accent-text: #0a84ff;
+  --on-accent: #ffffff;
+  --fill: rgba(118, 118, 128, 0.24);
+  --dim: rgba(0, 0, 0, 0.45);
+  --danger-text: #ff453a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+
+button {
+  font-family: inherit;
+  color: inherit;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ── the three bands ─────────────────────────────────────────────────────── */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+/* ── the bar ─────────────────────────────────────────────────────────────── */
+
+.bar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--s-sm);
+  padding: var(--s-sm) var(--s-md);
+  padding-block-start: calc(env(safe-area-inset-top, 0px) + var(--s-sm));
+  background: var(--surface);
+  border-block-end: 1px solid var(--line);
+}
+
+.doc-name {
+  min-width: 0;
+  font-weight: 700;
+  font-size: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.page-count {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+.bar-actions {
+  margin-inline-start: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--s-xs);
+}
+
+.icon-btn,
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.icon-btn {
+  width: 40px;
+  min-width: 40px;
+  border-radius: var(--r-md);
+  color: var(--accent-text);
+}
+
+.icon-btn svg {
+  width: 22px;
+  height: 22px;
+}
+
+.icon-btn:disabled {
+  color: var(--faint);
+  cursor: default;
+}
+
+.btn {
+  padding-inline: var(--s-lg);
+  border-radius: var(--r-md);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.btn.primary {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.btn.primary:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.btn.ghost {
+  color: var(--accent-text);
+}
+
+.btn.big {
+  min-height: 52px;
+  padding-inline: var(--s-xl);
+  border-radius: var(--r-xl);
+  font-size: 17px;
+}
+
+/* ── the pages ───────────────────────────────────────────────────────────── */
+
+/*
+ * One finger pans; pinch-zoom and double-tap zoom are this page's own, so
+ * `touch-action` names `pan-y` alone. Naming `manipulation` or `pinch-zoom`
+ * would hand both gestures to the browser, which then takes the pointer stream
+ * away before the code below can measure it.
+ */
+.stage {
+  flex: 1 1 auto;
+  position: relative;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  padding: var(--s-md);
+  padding-block-end: var(--s-xl);
+}
+
+.empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-md);
+  padding: var(--s-md);
+}
+
+.pages {
+  --fit: 100%;
+  --zoom: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-md);
+}
+
+.page {
+  width: calc(var(--fit) * var(--zoom));
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+}
+
+.page canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* ── the tools ───────────────────────────────────────────────────────────── */
+
+.tools {
+  flex: 0 0 auto;
+  background: var(--surface);
+  border-block-start: 1px solid var(--line);
+  padding-block-end: env(safe-area-inset-bottom, 0px);
+}
+
+.props {
+  display: flex;
+  align-items: center;
+  gap: var(--s-md);
+  overflow-x: auto;
+  padding: var(--s-xs) var(--s-md);
+  border-block-end: 1px solid var(--line);
+  scrollbar-width: none;
+}
+
+.props::-webkit-scrollbar {
+  display: none;
+}
+
+.prop-group {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--s-xs);
+}
+
+.prop-label {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.swatch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.swatch i {
+  display: block;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--r-xxl);
+  border: 1px solid var(--line);
+  background: var(--sw);
+}
+
+.swatch[aria-pressed='true'] i {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.chip {
+  min-width: 40px;
+  min-height: 40px;
+  padding-inline: var(--s-xs);
+  border: 0;
+  border-radius: var(--r-md);
+  background: var(--fill);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.chip[aria-pressed='true'] {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.toolbar {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  overflow-x: auto;
+  padding: var(--s-xs) var(--s-sm);
+  scrollbar-width: none;
+}
+
+.toolbar::-webkit-scrollbar {
+  display: none;
+}
+
+.tool {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-xs);
+  width: 58px;
+  min-height: 56px;
+  padding: var(--s-xs) 2px;
+  border: 0;
+  border-radius: var(--r-md);
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tool svg {
+  width: 22px;
+  height: 22px;
+}
+
+.tool-label {
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.tool[aria-pressed='true'] {
+  background: var(--surface2);
+  color: var(--accent-text);
+}
+
+/* ── the command bar ─────────────────────────────────────────────────────── */
+
+/*
+ * What the person wants done, at the foot of the document and just above the
+ * tools: one field, one button, and — once an answer is in — the plan itself, one
+ * line per step with the two things that can be done to it. Nothing here is a
+ * sheet and nothing here is a caption: a line of the plan is what will run.
+ */
+
+.ask {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-sm);
+  padding: var(--s-sm) var(--s-md);
+  border-block-end: 1px solid var(--line);
+}
+
+.ask-form {
+  display: flex;
+  gap: var(--s-sm);
+}
+
+.ask-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 40px;
+  padding-inline: var(--s-md);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--fill);
+  color: var(--text);
+  font: inherit;
+  font-size: 16px;
+}
+
+.ask-input:disabled {
+  color: var(--muted);
+}
+
+.plan {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-sm);
+}
+
+.plan-steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 34vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.plan-step {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s-xs);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.plan-op {
+  font-weight: 700;
+}
+
+.plan-why {
+  color: var(--muted);
+}
+
+.plan-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.plan-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--s-sm);
+}
+
+/* ── the password gate ───────────────────────────────────────────────────── */
+
+/*
+ * A locked file is asked for its password here, in the page itself: one field,
+ * one button, and the error above the button when the password was wrong. It
+ * covers the whole screen because the file cannot be drawn until it is open.
+ */
+.gate {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s-md);
+  background: var(--dim);
+}
+
+.gate-card {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-md);
+  padding: var(--s-lg);
+  border: 1px solid var(--line);
+  border-radius: var(--r-xl);
+  background: var(--surface);
+}
+
+.gate-label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-xs);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.gate-input {
+  min-height: 44px;
+  padding-inline: var(--s-md);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--fill);
+  color: var(--text);
+  font: inherit;
+  font-size: 17px;
+}
+
+.gate-error {
+  margin: 0;
+  color: var(--danger-text);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+[hidden] {
+  display: none !important;
+}

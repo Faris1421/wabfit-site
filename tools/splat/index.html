@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ar" dir="rtl" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no"
+    />
+    <title>Wab Fit</title>
+    <link rel="stylesheet" href="./app.css" />
+  </head>
+  <body>
+    <!-- The renderer. Full viewport, the app's background behind it. -->
+    <canvas id="canvas"></canvas>
+
+    <!--
+      The viewer dereferences #fps and #camid unconditionally (it writes the
+      frame rate and the camera index into them). We show neither, so both stay
+      in the DOM and hidden. #spinner is the same: it must exist, it must never
+      be seen — the state line below is the only thing that speaks.
+    -->
+    <div id="fps" hidden></div>
+    <div id="camid" hidden></div>
+    <div id="spinner" hidden></div>
+
+    <!-- Loading progress: a thin determinate bar across the top. -->
+    <div id="progress" aria-hidden="true"></div>
+
+    <!-- The one line of state text, centred. -->
+    <p id="message"></p>
+
+    <!--
+      The one control: reset the view to the neutral camera. It is hidden until
+      the first frame is on screen — before that there is no view to reset, and
+      on the no-source and error screens it stays out of the way.
+    -->
+    <button id="reset" type="button" aria-label="إعادة ضبط العرض" hidden>
+      <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+        <path
+          d="M3 12a9 9 0 1 0 3.2-6.9"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
+        <path
+          d="M3 4.5V9h4.5"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+    </button>
+
+    <!--
+      Both are ES modules, so they run in order after the document is parsed:
+      boot.js first (it sets the source, the theme and the callbacks), then the
+      patched renderer.
+    -->
+    <script type="module" src="./boot.js"></script>
+    <script type="module" src="./viewer.js"></script>
+  </body>
+</html>
