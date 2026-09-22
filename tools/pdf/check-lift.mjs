@@ -137,6 +137,53 @@ if (written) {
 const blank = cut({ data: bitmap(CROP, CROP, () => 240), width: CROP, height: CROP }, null, null);
 check('cut: a blank crop answered a signature', blank === null);
 
+/*
+ * The four frames the field broke on, built the way the page above is built: one
+ * grey for the pen, one for the paper, and the right answer counted by eye. The
+ * hand is the same twelve-by-two stroke in all of them.
+ */
+const FRAME = 40;
+const hand = (x, y) => x >= 12 && x <= 23 && y >= 20 && y <= 21;
+
+/* A rule right across the frame: ink, and not a hand. Before the writing was
+ * told apart from what only shares its frame, this line stretched the box to
+ * the frame itself and the cut was the rectangle the reader drew. */
+const ruledFrame = bitmap(FRAME, FRAME, (x, y) => (y === 2 || hand(x, y) ? PEN : PAPER));
+const ruledBox = cut({ data: ruledFrame, width: FRAME, height: FRAME }, null, null);
+check(
+  `cut: a rule across the frame left a ${ruledBox ? ruledBox.w : '—'}×${ruledBox ? ruledBox.h : '—'} box, the hand is 12×2`,
+  Boolean(ruledBox) && ruledBox.w === 12 && ruledBox.h === 2,
+);
+
+/* A printed word in the corner: a dense four-by-four block of the page's own
+ * print, far from the hand, and the box must be the hand and leave it there. */
+const printedFrame = bitmap(FRAME, FRAME, (x, y) => (
+  hand(x, y) || (x >= 32 && x <= 35 && y >= 3 && y <= 6) ? PEN : PAPER
+));
+const printedBox = cut({ data: printedFrame, width: FRAME, height: FRAME }, null, null);
+check(
+  `cut: a printed block in the corner left a ${printedBox ? printedBox.w : '—'}×${printedBox ? printedBox.h : '—'} box, the hand is 12×2`,
+  Boolean(printedBox) && printedBox.w === 12 && printedBox.h === 2,
+);
+
+/* A frame over a dark block: a table cell, a shaded field, a photograph. Most of
+ * the crop is one solid grey with a paper margin, so its two clumps are the block
+ * and the block — there is no handwriting in it, and the answer is nothing. */
+const darkFrame = bitmap(FRAME, FRAME, (x) => (x < 30 ? 40 : 210));
+const darkBox = cut({ data: darkFrame, width: FRAME, height: FRAME }, null, null);
+check('cut: a frame of mostly dark ink answered a solid rectangle', darkBox === null);
+
+/* The dot on the i: four pixels of pen sitting two above the hand. Proximity
+ * keeps them together — a box around the largest mark alone would lose the dot. */
+const dottedFrame = bitmap(FRAME, FRAME, (x, y) => (
+  hand(x, y) || (x >= 20 && x <= 21 && y >= 16 && y <= 17) ? PEN : PAPER
+));
+const dottedBox = cut({ data: dottedFrame, width: FRAME, height: FRAME }, null, null);
+check(
+  `cut: the dot above the hand left a ${dottedBox ? dottedBox.w : '—'}×${dottedBox ? dottedBox.h : '—'} box, the hand with its dot is 12×6`,
+  Boolean(dottedBox) && dottedBox.w === 12 && dottedBox.h === 6,
+);
+
 if (problems.length > 0) {
   for (const problem of problems) console.error(`check-lift: ${problem}`);
   console.error(`check-lift: ${problems.length} problem(s)`);
