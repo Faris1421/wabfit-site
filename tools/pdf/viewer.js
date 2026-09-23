@@ -27,6 +27,7 @@
 
 import { pdfjsDoc } from './docstore.js';
 import { displaySize, normalizeRotation } from './core.js';
+import { MAX_SIDE } from './sign-engine.js';
 
 /* ── limits ──────────────────────────────────────────────────────────────── */
 
@@ -48,7 +49,9 @@ const PARALLEL = 3;
 const A4 = { width: 595.28, height: 841.89 };
 /** How much finer than the screen a crop is drawn, and how far it may go. */
 const CROP_DETAIL = 3;
-const CROP_MAX_SIDE = 1400;
+/** The longest side a crop is drawn at: the engine works a crop at up to this,
+ *  so drawing it any finer would be averaged away before it was ever read. */
+const CROP_MAX_SIDE = MAX_SIDE;
 
 /* ── state ───────────────────────────────────────────────────────────────── */
 

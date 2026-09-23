@@ -93,6 +93,12 @@ const ar = {
   saveSign: 'احفظ',
   tryAgain: 'أعد المحاولة',
   liftLocal: 'قُصّ التوقيع هنا بلا مساعدة الذكاء الاصطناعي',
+  // The inks a lifted pen may be painted in, and the eraser that rubs out a mark
+  // the cut kept by mistake.
+  inkBlack: 'الأسود',
+  inkBlue: 'الأزرق',
+  inkSource: 'لون الحبر الأصلي',
+  erase: 'ممحاة',
   // The command bar: what the person wants done, and the plan before it runs.
   ask: 'اسأل',
   askWhat: 'اكتب ما تريد تعديله في الملف',
@@ -175,6 +181,10 @@ const en = {
   saveSign: 'Save',
   tryAgain: 'Try again',
   liftLocal: 'The signature was trimmed here without AI help',
+  inkBlack: 'Black',
+  inkBlue: 'Blue',
+  inkSource: 'The ink’s own colour',
+  erase: 'Eraser',
   ask: 'Ask',
   askWhat: 'Write what you want changed in the file',
   planTitle: 'Plan',
