@@ -7,9 +7,9 @@
  * language, theme, the empty state, the tool selection and which page the bar
  * says is on screen. The pages themselves, their lazy rendering and the zoom
  * gestures are viewer.js's business, the bytes, the pdf.js handles and the
- * password gate are docstore.js's, the shared state is ctx.js's, and the
- * editing itself is the tools' business; this file wires them to the screen and
- * nothing more.
+ * password gate are docstore.js's, the shared state is ctx.js's, the editing
+ * itself is the tools' business, and writing the edited document out is
+ * export.js's; this file wires them to the screen and nothing more.
  *
  * Two ways in, and they are the same code path afterwards:
  *
@@ -26,6 +26,7 @@ import { t, setLang } from './i18n.js';
 import { send, onMessage } from './bridge.js';
 import { createCtx } from './ctx.js';
 import { init as initDocstore, openBytes } from './docstore.js';
+import { exportEdited } from './export.js';
 import { init as initViewer } from './viewer.js';
 import { init as initOverlay } from './overlay.js';
 import { init as initPages } from './pages.js';
@@ -280,7 +281,7 @@ function wireInputs() {
       .catch(() => send('error', { code: 'open-failed' }));
   });
   el.exportBtn.addEventListener('click', () => {
-    exportDocument();
+    exportDocument().catch(() => send('error', { code: 'export-failed' }));
   });
   // Undo and redo put a whole earlier document back; 'doc' tells the screen,
   // the bar and every tool about it, exactly as it does after a commit.
@@ -335,10 +336,15 @@ function deliver(name, bytes) {
   window.setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
 
-/** The document itself, handed back to the app or downloaded when there is none. */
-function exportDocument() {
-  const bytes = ctx.sources[0];
-  if (!bytes || ctx.doc.pages.length === 0) return;
+/**
+ * The document itself, written out of the edit model — every page in its place,
+ * every object on its page — and handed back to the app, or downloaded when
+ * there is none. It is never a source file: what the person edited is what they
+ * get, which is the whole point of the button.
+ */
+async function exportDocument() {
+  if (ctx.doc.pages.length === 0 || ctx.sources.length === 0) return;
+  const bytes = await exportEdited(ctx);
   const stored = ctx.names[0];
   const name = !stored || stored === '—' ? 'wabfit.pdf' : stored;
   deliver(name, bytes);
