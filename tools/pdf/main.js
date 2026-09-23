@@ -39,12 +39,14 @@ import { init as initSignTool } from './tool-sign.js';
 import { init as initWhiteoutTool } from './tool-whiteout.js';
 import { init as initEditTextTool } from './tool-edittext.js';
 import { init as initUnlockTool, refresh as refreshUnlock } from './unlock.js';
+import { init as initSearchTool, refresh as refreshSearch } from './search.js';
 import { answer as answerCommand, init as initCommand, refresh as refreshCommand } from './command.js';
 
 /* ── the tools ───────────────────────────────────────────────────────────── */
 
 const TOOLS = [
   { id: 'select', key: 'tSelect', icon: 'select' },
+  { id: 'search', key: 'tSearch', icon: 'search' },
   { id: 'text', key: 'tText', icon: 'text' },
   { id: 'draw', key: 'tDraw', icon: 'draw' },
   { id: 'highlight', key: 'tHighlight', icon: 'highlight' },
@@ -65,6 +67,8 @@ const TOOLS = [
 const ICONS = {
   select:
     '<rect x="4" y="4" width="16" height="16" rx="2" stroke-dasharray="3 2.6"/>',
+  search:
+    '<circle cx="11" cy="11" r="6.5"/><path d="M15.8 15.8L20.5 20.5"/>',
   text:
     '<path d="M5 6.5V5h14v1.5"/><path d="M12 5v14"/><path d="M9 19h6"/>',
   draw:
@@ -169,6 +173,7 @@ function paintLabels() {
   }
 
   refreshProps();
+  refreshSearch();
   refreshUnlock();
   refreshCommand();
   updateBar();
@@ -461,6 +466,7 @@ function boot() {
   initSignTool(ctx);
   initWhiteoutTool(ctx);
   initEditTextTool(ctx);
+  initSearchTool(ctx);
   initUnlockTool(ctx);
   initCommand(ctx);
   setLang(view.lang);

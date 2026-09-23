@@ -117,6 +117,13 @@ const ar = {
   opWhiteout: 'طمس مستطيل على الصفحة {n}',
   opHighlight: 'تظليل على الصفحة {n}',
   opAddShape: 'إضافة شكل على الصفحة {n}',
+
+  // Looking for words on a page: the tool, the place of the match in hand among
+  // the matches found, and the two steps either way.
+  tSearch: 'بحث',
+  searchCount: '{x} / {n}',
+  prevMatch: 'السابق',
+  nextMatch: 'التالي',
 };
 
 const en = {
@@ -201,6 +208,11 @@ const en = {
   opWhiteout: 'White out a rectangle on page {n}',
   opHighlight: 'Highlight on page {n}',
   opAddShape: 'Add a shape on page {n}',
+
+  tSearch: 'Search',
+  searchCount: '{x} / {n}',
+  prevMatch: 'Previous',
+  nextMatch: 'Next',
 };
 
 /** The whole dictionary, keyed by language. Exported so a test can compare the two halves. */
