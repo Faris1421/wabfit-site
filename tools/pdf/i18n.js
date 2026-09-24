@@ -124,6 +124,12 @@ const ar = {
   searchCount: '{x} / {n}',
   prevMatch: 'السابق',
   nextMatch: 'التالي',
+
+  // The gate a locked file is asked its password in: opening the file as it is,
+  // taking the lock off it here instead, and the way out of the gate.
+  openLocked: 'فتح',
+  unlockLocked: 'فك القفل',
+  cancel: 'إلغاء',
 };
 
 const en = {
@@ -213,6 +219,10 @@ const en = {
   searchCount: '{x} / {n}',
   prevMatch: 'Previous',
   nextMatch: 'Next',
+
+  openLocked: 'Open',
+  unlockLocked: 'Remove the lock',
+  cancel: 'Cancel',
 };
 
 /** The whole dictionary, keyed by language. Exported so a test can compare the two halves. */

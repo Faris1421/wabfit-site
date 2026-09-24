@@ -69,9 +69,11 @@ function isPasswordError(error) {
 let openGate = null;
 
 /**
- * One inline field, in the page itself. Answers the typed password, or null
- * when the person backs out (Escape, or a second file opened meanwhile).
- * A wrong password keeps the field open and says so above it.
+ * One inline field, in the page itself. Answers `{password, unlock}`: what was
+ * typed, and whether the lock was asked to come off while the file is open —
+ * the copy the lock tool makes, offered here so the password is asked for once.
+ * It answers null when the person backs out (Escape, «إلغاء», or a second file
+ * opened meanwhile). A wrong password keeps the field open and says so above it.
  */
 function askPassword(wrong) {
   if (openGate) openGate(null);
@@ -102,8 +104,28 @@ function askPassword(wrong) {
     const submit = document.createElement('button');
     submit.type = 'submit';
     submit.className = 'btn primary';
-    submit.textContent = t('done');
+    submit.textContent = t('openLocked');
     card.append(submit);
+
+    const unlock = document.createElement('button');
+    unlock.type = 'button';
+    unlock.className = 'btn ghost';
+    unlock.textContent = t('unlockLocked');
+    unlock.addEventListener('click', () => {
+      if (!input.value) {
+        input.focus();
+        return;
+      }
+      close({ password: input.value, unlock: true });
+    });
+
+    const cancel = document.createElement('button');
+    cancel.type = 'button';
+    cancel.className = 'btn ghost';
+    cancel.textContent = t('cancel');
+    cancel.addEventListener('click', () => close(null));
+
+    card.append(unlock, cancel);
     form.append(card);
 
     function onKey(event) {
@@ -125,7 +147,7 @@ function askPassword(wrong) {
         input.focus();
         return;
       }
-      close(value);
+      close({ password: value, unlock: false });
     });
     document.addEventListener('keydown', onKey);
     document.body.append(form);
@@ -135,16 +157,20 @@ function askPassword(wrong) {
 
 /**
  * Hands bytes to pdf.js, asking for the password in the page when the file is
- * locked and asking again when it was wrong. Answers null when the person
- * backed out, otherwise `{doc, locked}`.
+ * locked and asking again when it was wrong. `given` is a password already in
+ * hand — the one the file was just opened with — and is tried before anything
+ * is asked. Answers null when the person backed out, otherwise `{doc, locked,
+ * unlock, password}`: the password that opened it, and whether the lock was
+ * asked to come off rather than the file merely opened.
  *
  * A second caller opens a file with the lock tool, which is why this is handed
  * out: the field, the retry and the refusal to guess are the same ones either
  * way, and there is one password gate in this page, not two.
  */
-export async function readPdf(bytes) {
+export async function readPdf(bytes, given = null) {
   const lib = await loadPdfjs();
-  let password = null;
+  let password = given;
+  let unlock = false;
   for (;;) {
     const options = password === null
       ? { data: copyOf(bytes) }
@@ -152,13 +178,15 @@ export async function readPdf(bytes) {
     const task = lib.getDocument(options);
     try {
       const doc = await task.promise;
-      return { doc, locked: password !== null };
+      return { doc, locked: password !== null, unlock, password };
     } catch (error) {
       if (!isPasswordError(error)) throw error;
       Promise.resolve(task.destroy()).catch(() => {});
       // pdf.js's INCORRECT_PASSWORD is 2; anything else is the first ask.
-      password = await askPassword(error.code === 2);
-      if (password === null) return null;
+      const answer = await askPassword(error.code === 2);
+      if (answer === null) return null;
+      password = answer.password;
+      unlock = answer.unlock;
     }
   }
 }
@@ -172,6 +200,11 @@ function nameOf(name) {
  * Opens a PDF as THE document. Its bytes become source 0, every source opened
  * before it is forgotten, and the history starts again — a file that was just
  * opened is not an edit of the file that was open before it.
+ *
+ * Answers null when the password gate was backed out of, otherwise `{doc,
+ * unlock, password}`: the document, whether the person asked for the lock to
+ * come off while they were in the gate, and the password that opened the file,
+ * so that the lock tool needs no second question.
  */
 export async function openBytes(ctx, name, bytes) {
   const app = ctx || ctxRef;
@@ -198,12 +231,17 @@ export async function openBytes(ctx, name, bytes) {
   app.selection = null;
   app.emit('doc', app.doc);
   app.emit('open', { name: app.names[0], pages: app.doc.pages.length });
-  return app.doc;
+  return { doc: app.doc, unlock: read.unlock, password: read.password };
 }
 
 /**
- * Registers one more PDF as a source for a merge and answers where its pages
- * are: `{index, pageCount}`, or null when the password gate was abandoned.
+ * Registers one more PDF as a source for a merge and answers what the gate was
+ * answered as well as where the pages are: `{index, pageCount, unlock,
+ * password}`, or null when the password gate was abandoned. This one is a source
+ * and never the document, so the copy «فك القفل» asks for cannot be written from
+ * here: the bytes are registered first, and the CALLER then runs the unlock tool
+ * on that source — exactly what the open path does — with the password that is
+ * now in hand.
  *
  * It does NOT touch the document — the pages tool decides which of those pages
  * it wants and commits once, so a cancelled merge leaves nothing behind.
@@ -220,5 +258,5 @@ export async function addSource(ctx, name, bytes) {
   app.names.push(nameOf(name));
   handles.set(index, read.doc);
   if (read.locked) locked.add(index);
-  return { index, pageCount: read.doc.numPages };
+  return { index, pageCount: read.doc.numPages, unlock: read.unlock, password: read.password };
 }

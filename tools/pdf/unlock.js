@@ -76,7 +76,7 @@ async function drawPage(doc, index) {
 
 /** The name the unlocked copy goes back under, beside the original's own. */
 function unlockedName() {
-  const stored = ctx.names[0];
+  const stored = ctx.names[sourceIndex];
   const base = !stored || stored === '—' ? 'wabfit' : stored.replace(/\.pdf$/i, '');
   return `${base}-unlocked.pdf`;
 }
@@ -105,6 +105,8 @@ let ctx = null;
 let el = null;
 /** Which lock the file in hand carries: 'none', 'owner' or 'user'. */
 let kind = 'none';
+/** The source the panel is about: the document, unless a merge named another. */
+let sourceIndex = 0;
 /** The line under the action once something was done, by key, or null. */
 let said = null;
 let busy = false;
@@ -161,7 +163,7 @@ function build() {
 
 /** What the panel says about the file in hand — nothing at all when there is none. */
 function statusKeys() {
-  if (ctx.doc.pages.length === 0 || !ctx.sources[0]) return [];
+  if (ctx.doc.pages.length === 0 || !ctx.sources[sourceIndex]) return [];
   if (kind === 'owner') return ['lockOwner'];
   if (kind === 'user') return ['lockUser', 'lockForgotten'];
   return ['lockNone'];
@@ -195,12 +197,15 @@ function paint() {
  * given a password for is the one that will not open without it.
  */
 async function readKind() {
+  const at = sourceIndex;
   kind = 'none';
   said = null;
-  const handle = pdfjsDoc(0);
-  if (ctx.sources[0] && handle) {
+  const handle = pdfjsDoc(at);
+  if (ctx.sources[at] && handle) {
     const permissions = await handle.getPermissions();
-    if (isEncrypted(0)) kind = 'user';
+    // A merge may have named another source meanwhile: this answer is stale.
+    if (at !== sourceIndex) return;
+    if (isEncrypted(at)) kind = 'user';
     else if (Array.isArray(permissions)) kind = 'owner';
   }
   paint();
@@ -208,8 +213,12 @@ async function readKind() {
 
 /* ── the one action ──────────────────────────────────────────────────────── */
 
-/** The tap: take the lock off what is in hand, then say what came back. */
-async function run() {
+/**
+ * The tap: take the lock off what is in hand, then say what came back. A
+ * `password` already in hand — the one main.js just opened the file with, or the
+ * one a merge's gate was answered with — is used instead of asking a second time.
+ */
+async function run(password = null) {
   if (busy || kind === 'none' || ctx.doc.pages.length === 0) return;
   busy = true;
   said = null;
@@ -219,7 +228,7 @@ async function run() {
       // The person's own password, typed into the page's gate: pdf.js opens the
       // file with it, says so when it is wrong, and lets them try again. Nothing
       // here guesses, and there is no list of words to try.
-      const opened = await readPdf(ctx.sources[0]);
+      const opened = await readPdf(ctx.sources[sourceIndex], password);
       if (!opened) return;
       try {
         await write(opened.doc);
@@ -228,7 +237,7 @@ async function run() {
       }
       said = 'unlockedUser';
     } else {
-      const handle = pdfjsDoc(0);
+      const handle = pdfjsDoc(sourceIndex);
       if (!handle) return;
       await write(handle);
       said = 'unlockedOwner';
@@ -253,11 +262,15 @@ export function init(context) {
       return;
     }
     el.panel.hidden = false;
+    // Tapped in the bar: the panel is about the document in hand. A merge that
+    // asked for a source's lock to come off sets the index again right after.
+    sourceIndex = 0;
     readKind().catch(() => undefined);
   });
   // A file was opened: what it is locked with is read before anything is asked
-  // of it.
+  // of it, and the document is source 0 again.
   ctx.on('open', () => {
+    sourceIndex = 0;
     readKind().catch(() => undefined);
   });
   ctx.on('doc', () => {
@@ -270,4 +283,23 @@ export function init(context) {
 /** The language changed: the panel is written again in the new one. */
 export function refresh() {
   paint();
+}
+
+/**
+ * A locked file was just opened — or a locked file just joined a merge — and its
+ * person asked, in the gate itself, for the lock to come off: the tool comes up
+ * and its one action runs with the password that is already in hand, so the
+ * unlocked copy is written without a second question. `source` names the source
+ * the copy is written from: the document, or the one a merge just registered.
+ */
+export async function removeLock(password, source = 0) {
+  if (!ctx) return;
+  ctx.setTool('unlock');
+  // A tap in the bar means the document; this call names the source the copy is
+  // to be written from, so it is set after the tool is entered.
+  sourceIndex = source;
+  // The lock in hand is read before the action looks at it: when the tool is
+  // entered this way the panel has only just been shown.
+  await readKind().catch(() => undefined);
+  await run(password);
 }

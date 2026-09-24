@@ -38,7 +38,7 @@ import { init as initImageTool } from './tool-image.js';
 import { init as initSignTool } from './tool-sign.js';
 import { init as initWhiteoutTool } from './tool-whiteout.js';
 import { init as initEditTextTool } from './tool-edittext.js';
-import { init as initUnlockTool, refresh as refreshUnlock } from './unlock.js';
+import { init as initUnlockTool, refresh as refreshUnlock, removeLock } from './unlock.js';
 import { init as initSearchTool, refresh as refreshSearch } from './search.js';
 import { answer as answerCommand, init as initCommand, refresh as refreshCommand } from './command.js';
 
@@ -252,13 +252,28 @@ function base64FromBytes(bytes) {
   return btoa(binary);
 }
 
-/** A blank A4 page, written here and then opened like any other file. */
+/**
+ * A blank A4 page, written here and then opened through the one open path,
+ * which is where the gate's answer is honoured.
+ */
 async function openBlankDocument() {
   const { PDFDocument } = await loadPdfLib();
   const pdf = await PDFDocument.create();
   pdf.addPage([595.28, 841.89]); // A4, in points
   const bytes = await pdf.save();
-  await openBytes(ctx, '—', bytes);
+  await openedFrom('—', bytes);
+}
+
+/**
+ * One of the two ways in: the bytes are opened, and nothing is said when the
+ * person backs out of the password gate — that is a cancel, not a failure, and
+ * the picker is where they are left. When they asked, in that gate, for the
+ * lock to come off, the unlock tool's one action runs with the password that is
+ * already in hand, so the unlocked copy is written without a second question.
+ */
+async function openedFrom(name, bytes) {
+  const opened = await openBytes(ctx, name, bytes);
+  if (opened && opened.unlock) await removeLock(opened.password);
 }
 
 /**
@@ -282,7 +297,7 @@ function wireInputs() {
     if (!file) return;
     file
       .arrayBuffer()
-      .then((buffer) => openBytes(ctx, file.name, new Uint8Array(buffer)))
+      .then((buffer) => openedFrom(file.name, new Uint8Array(buffer)))
       .catch(() => send('error', { code: 'open-failed' }));
   });
   el.exportBtn.addEventListener('click', () => {
@@ -403,7 +418,7 @@ function wireBridge() {
   onMessage((message) => {
     if (message.type === 'open' && typeof message.base64 === 'string') {
       const name = typeof message.name === 'string' ? message.name : '';
-      openBytes(ctx, name, bytesFromBase64(message.base64)).catch(() =>
+      openedFrom(name, bytesFromBase64(message.base64)).catch(() =>
         send('error', { code: 'open-failed' }),
       );
       return;
