@@ -1,0 +1,165 @@
+/*
+ * The sign-in page, on top of ../assets/site.css — same palette, same type, a
+ * narrower column, and the two things the brochure pages never needed: a form
+ * and buttons. Colours are the site's tokens only, so dark mode follows.
+ */
+
+.oc main {
+  max-width: 27rem;
+  margin: 0 auto;
+}
+
+.oc h1 {
+  font-size: clamp(26px, 7vw, 34px);
+  margin-bottom: 10px;
+}
+
+.oc form {
+  display: grid;
+  gap: 14px;
+  margin: 18px 0 8px;
+}
+
+.oc label {
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.oc input {
+  font: inherit;
+  /* 16px or more, so iOS does not zoom the page when the field is focused. */
+  font-size: 16.5px;
+  font-weight: 400;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  /* An address and a password are Latin whatever the page language is. */
+  direction: ltr;
+  text-align: left;
+}
+
+.oc input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.oc .btn {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 0;
+  border-radius: 14px;
+  font: inherit;
+  font-weight: 700;
+  font-size: 16.5px;
+  line-height: 1.4;
+  padding: 13px 18px;
+  width: 100%;
+  cursor: pointer;
+}
+
+.oc .btn.primary {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.oc .btn.ghost {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--line);
+}
+
+.oc .btn[disabled] {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.oc .row {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.oc .card {
+  padding: 18px 20px 12px;
+  margin: 14px 0 12px;
+}
+
+.oc .ask {
+  color: var(--text);
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.oc .perm {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.oc .perm li {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  padding: 4px 0;
+  color: var(--text);
+}
+
+.oc .perm li.no {
+  color: var(--muted);
+}
+
+.oc .mark {
+  flex: none;
+  width: 1.2em;
+  text-align: center;
+  font-weight: 900;
+  color: var(--accent-text);
+}
+
+.oc .perm li.no .mark {
+  color: var(--faint);
+}
+
+.oc .meta {
+  font-size: 14px;
+  margin: 0 0 4px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.oc .note {
+  font-size: 13.5px;
+  color: var(--faint);
+}
+
+.oc .link {
+  appearance: none;
+  -webkit-appearance: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: var(--accent-text);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.oc .alert {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--accent);
+  color: var(--text);
+  background: var(--surface2);
+  font-size: 14.5px;
+}
+
+.oc .lead.ok {
+  font-weight: 700;
+}

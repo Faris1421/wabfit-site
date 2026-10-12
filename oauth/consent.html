@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<!--
+  The sign-in page of the Wab Fit connector. Supabase Auth's OAuth 2.1 server
+  sends the owner here (Site URL + Authorization Path = /oauth/consent) with an
+  `authorization_id`; this page signs him in, asks once, and hands Claude or
+  ChatGPT its authorisation code. See ./consent.js for the whole flow and
+  docs/MCP_ONE_TAP.md for how it is switched on.
+
+  The CSP is repeated as a real header in ../_headers (frame-ancestors only
+  works there); this copy keeps the page locked down wherever it is served.
+-->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; connect-src https://cijawuykugjgvmlbdvaj.supabase.co; base-uri 'none'; form-action 'none'">
+<title>ربط Wab Fit</title>
+<link rel="icon" href="../assets/icon.png">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="./consent.css">
+</head>
+<body>
+<div class="wrap oc">
+
+<header class="bar">
+  <img src="../assets/icon.png" srcset="../assets/icon.png 1x, ../assets/icon@2x.png 2x" alt="" width="38" height="38">
+  <span class="name">Wab Fit</span>
+</header>
+
+<main aria-live="polite">
+  <h1 id="title" data-t="titleGeneric">ربط Wab Fit</h1>
+
+  <section id="v-loading">
+    <p data-t="loading">لحظة…</p>
+  </section>
+
+  <section id="v-signin" hidden>
+    <p class="lead" data-t="signinLead">سجّل الدخول بحساب Wab Fit نفسه الذي تستخدمه في التطبيق.</p>
+    <form id="signin-form" novalidate>
+      <label><span data-t="email">البريد الإلكتروني</span>
+        <input id="email" type="email" name="email" autocomplete="username" inputmode="email" autocapitalize="none" spellcheck="false" required>
+      </label>
+      <label><span data-t="password">كلمة المرور</span>
+        <input id="password" type="password" name="password" autocomplete="current-password" required>
+      </label>
+      <p id="signin-error" class="alert" role="alert" hidden></p>
+      <button id="signin-btn" class="btn primary" type="submit" data-t="signin">تسجيل الدخول</button>
+    </form>
+    <p class="note" data-t="forgot">نسيت كلمة المرور؟ أعد تعيينها من التطبيق.</p>
+  </section>
+
+  <section id="v-consent" hidden>
+    <div class="card">
+      <p class="ask" id="consent-lead"></p>
+      <ul class="perm">
+        <li><span class="mark" aria-hidden="true">✓</span><span data-t="canRead">يقرأ وجباتك وتمارينك وقياساتك وقراءات السكر والصيام</span></li>
+        <li><span class="mark" aria-hidden="true">✓</span><span data-t="canWrite">يسجّل ويعدّل ما تطلبه منه</span></li>
+        <li class="no"><span class="mark" aria-hidden="true">✕</span><span data-t="cannot">لا يصل إلى رسائلك أو أصدقائك، ولا يحذف حسابك</span></li>
+      </ul>
+    </div>
+    <p class="meta"><span id="account"></span> · <button id="switch-btn" class="link" type="button" data-t="switchAccount">ليس حسابك؟</button></p>
+    <p class="meta" id="returns-to"></p>
+    <p id="consent-error" class="alert" role="alert" hidden></p>
+    <div class="row">
+      <button id="allow-btn" class="btn primary" type="button" data-t="allow">سماح</button>
+      <button id="deny-btn" class="btn ghost" type="button" data-t="deny">رفض</button>
+    </div>
+    <p class="note" data-t="revokeHint">يمكنك قطع الربط في أي وقت من «إلغاء الرابط» في التطبيق.</p>
+  </section>
+
+  <section id="v-done" hidden>
+    <p class="lead ok" id="done-text"></p>
+    <p class="note" id="done-manual"></p>
+  </section>
+
+  <section id="v-message" hidden>
+    <p class="lead" id="message-text"></p>
+  </section>
+</main>
+
+</div>
+<script src="./vendor/supabase-2.112.2.js"></script>
+<script src="./consent.js"></script>
+</body>
+</html>

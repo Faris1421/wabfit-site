@@ -3,3 +3,17 @@
 
 /assets/icon.png
   Cache-Control: public, max-age=604800
+
+# The connector's sign-in page (oauth/consent.html). Never framed, never cached,
+# never leaking its URL — it carries the authorisation id — to anyone.
+/oauth/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+
+/oauth/consent
+  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; connect-src https://cijawuykugjgvmlbdvaj.supabase.co; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+  Cache-Control: no-store
+
+/oauth/vendor/*
+  Cache-Control: public, max-age=31536000, immutable
