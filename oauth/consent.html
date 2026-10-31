@@ -16,7 +16,7 @@
   works there); this copy keeps the page locked down wherever it is served.
 -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; connect-src https://cijawuykugjgvmlbdvaj.supabase.co; base-uri 'none'; form-action 'none'">
-<title>ربط Wab Fit</title>
+<title>ربط wab</title>
 <link rel="icon" href="../assets/icon.png">
 <link rel="stylesheet" href="../assets/site.css">
 <link rel="stylesheet" href="./consent.css">
@@ -26,18 +26,22 @@
 
 <header class="bar">
   <img src="../assets/icon.png" srcset="../assets/icon.png 1x, ../assets/icon@2x.png 2x" alt="" width="38" height="38">
-  <span class="name">Wab Fit</span>
+  <span class="name">wab</span>
 </header>
 
 <main aria-live="polite">
-  <h1 id="title" data-t="titleGeneric">ربط Wab Fit</h1>
+  <h1 id="title" data-t="titleGeneric">ربط wab</h1>
 
   <section id="v-loading">
     <p data-t="loading">لحظة…</p>
   </section>
 
   <section id="v-signin" hidden>
-    <p class="lead" data-t="signinLead">سجّل الدخول بحساب Wab Fit نفسه الذي تستخدمه في التطبيق.</p>
+    <p class="lead" data-t="signinLead">سجّل الدخول بحساب wab نفسه الذي تستخدمه في التطبيق.</p>
+    <div id="handoff" class="handoff" hidden>
+      <button id="handoff-btn" class="btn primary" type="button" data-t="handoff">المتابعة عبر تطبيق wab</button>
+      <p class="or"><span data-t="or">أو</span></p>
+    </div>
     <form id="signin-form" novalidate>
       <label><span data-t="email">البريد الإلكتروني</span>
         <input id="email" type="email" name="email" autocomplete="username" inputmode="email" autocapitalize="none" spellcheck="false" required>
@@ -71,6 +75,14 @@
       <button id="deny-btn" class="btn ghost" type="button" data-t="deny">رفض</button>
     </div>
     <p class="note" data-t="revokeHint">يمكنك قطع الربط في أي وقت من «إلغاء الرابط» في التطبيق.</p>
+  </section>
+
+  <section id="v-handoff" hidden>
+    <p class="lead" data-t="handoffWaiting">اضغط «سماح» في تطبيق wab، ثم ارجع إلى هنا.</p>
+    <div class="row">
+      <button id="handoff-again" class="btn primary" type="button" data-t="handoffAgain">فتح تطبيق wab</button>
+      <button id="handoff-email" class="btn ghost" type="button" data-t="handoffEmail">الدخول بالبريد</button>
+    </div>
   </section>
 
   <section id="v-done" hidden>

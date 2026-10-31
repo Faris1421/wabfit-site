@@ -25,6 +25,18 @@
  *     clickjacked; the page renders nothing when it is not the top window (and
  *     `_headers` forbids framing outright).
  *
+ * «المتابعة عبر تطبيق wab» (2026-10-31). Inside ChatGPT's sign-in sheet on a
+ * phone nobody is signed in here, and typing an e-mail and a password was the
+ * one step left that was not a tap. So on iOS and Android the page also offers
+ * the signed-in app: it makes a one-time nonce (32 random bytes, base64url),
+ * keeps it in sessionStorage, and opens
+ * `wabfit://oauth-consent?authorization_id=…&nonce=…`. The app shows the same
+ * request and, on «سماح», approves it with its own session and hands the
+ * redirect to `…/wabfit-mcp/handoff` under that nonce. Back here — when the
+ * page is shown again, and every 2 s for up to 300 s — the page asks for it
+ * with the nonce and follows it only if `trustedApp` agrees. The e-mail form
+ * stays underneath, unchanged.
+ *
  * The anon key below is the same public key the app ships with; it opens
  * nothing by itself — every call that matters carries the owner's session.
  */
@@ -40,10 +52,15 @@
 
   var STRINGS = {
     ar: {
-      titleGeneric: 'ربط Wab Fit',
-      titleApp: 'ربط Wab Fit مع {app}',
+      titleGeneric: 'ربط wab',
+      titleApp: 'ربط wab مع {app}',
       loading: 'لحظة…',
-      signinLead: 'سجّل الدخول بحساب Wab Fit نفسه الذي تستخدمه في التطبيق.',
+      handoff: 'المتابعة عبر تطبيق wab',
+      or: 'أو',
+      handoffWaiting: 'اضغط «سماح» في تطبيق wab، ثم ارجع إلى هنا.',
+      handoffAgain: 'فتح تطبيق wab',
+      handoffEmail: 'الدخول بالبريد',
+      signinLead: 'سجّل الدخول بحساب wab نفسه الذي تستخدمه في التطبيق.',
       email: 'البريد الإلكتروني',
       password: 'كلمة المرور',
       signin: 'تسجيل الدخول',
@@ -73,15 +90,20 @@
       errGeneric: 'حدث خطأ. حاول مرة أخرى.',
     },
     en: {
-      titleGeneric: 'Connect Wab Fit',
-      titleApp: 'Connect Wab Fit to {app}',
+      titleGeneric: 'Connect wab',
+      titleApp: 'Connect wab to {app}',
       loading: 'One moment…',
-      signinLead: 'Sign in with the same Wab Fit account you use in the app.',
+      handoff: 'Continue with the wab app',
+      or: 'or',
+      handoffWaiting: 'Tap «Allow» in the wab app, then come back here.',
+      handoffAgain: 'Open the wab app',
+      handoffEmail: 'Sign in with e-mail',
+      signinLead: 'Sign in with the same wab account you use in the app.',
       email: 'Email',
       password: 'Password',
       signin: 'Sign in',
       forgot: 'Forgot your password? Reset it in the app.',
-      consentLead: '{app} is asking to use your Wab Fit account:',
+      consentLead: '{app} is asking to use your wab account:',
       canRead: 'Read your health data: meals, workouts, glucose readings, weight and body measurements, fasts and steps',
       canReadMore: 'Read your goals and settings, workout templates and plans, day notes, assistant conversations and memory, linked devices, and your comments and reactions',
       canFriends: 'Read your friends and what they share with you',
@@ -138,7 +160,7 @@
   });
   document.title = t('titleGeneric');
 
-  var VIEWS = ['v-loading', 'v-signin', 'v-consent', 'v-done', 'v-message'];
+  var VIEWS = ['v-loading', 'v-signin', 'v-handoff', 'v-consent', 'v-done', 'v-message'];
   function show(id) {
     VIEWS.forEach(function (v) {
       $(v).hidden = v !== id;
@@ -228,6 +250,12 @@
 
   // ── step 1: is anybody signed in here? ───────────────────────────────────
   function start() {
+    // A hand-off already under way in this tab: keep waiting for it.
+    if (resumeHandoff()) {
+      waitForHandoff();
+      pollHandoff();
+      return;
+    }
     show('v-loading');
     sb.auth.getSession().then(function (res) {
       var session = res && res.data ? res.data.session : null;
@@ -241,9 +269,138 @@
   function showSignin() {
     setTitle(null);
     hideError('signin-error');
+    $('handoff').hidden = !isPhone();
     show('v-signin');
-    $('email').focus();
+    if (!isPhone()) $('email').focus();
   }
+
+  // ── the hand-off to the signed-in app (see the header) ───────────────────
+  var HANDOFF_URL = CONFIG.supabaseUrl + '/functions/v1/wabfit-mcp/handoff';
+  var HANDOFF_KEY = 'wabfit-handoff:' + authorizationId;
+  var HANDOFF_EVERY_MS = 2000;
+  var HANDOFF_FOR_MS = 300000;
+  var handoffNonce = null;
+  var handoffSince = 0;
+  var handoffTimer = null;
+  var handoffAsking = false;
+
+  /** iOS, iPadOS (which calls itself a Mac with a touch screen) or Android. */
+  function isPhone() {
+    var ua = navigator.userAgent || '';
+    if (/iPhone|iPad|iPod|Android/i.test(ua)) return true;
+    return /Macintosh/i.test(ua) && Number(navigator.maxTouchPoints || 0) > 1;
+  }
+
+  /** 32 bytes from the platform's CSPRNG, base64url without padding: 43 characters. */
+  function makeNonce() {
+    var bytes = new Uint8Array(32);
+    window.crypto.getRandomValues(bytes);
+    var bin = '';
+    for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return window.btoa(bin).split('+').join('-').split('/').join('_').replace(/=+$/, '');
+  }
+
+  function appLink(nonce) {
+    return 'wabfit://oauth-consent?authorization_id=' + encodeURIComponent(authorizationId) +
+      '&nonce=' + encodeURIComponent(nonce);
+  }
+
+  function rememberHandoff() {
+    try {
+      window.sessionStorage.setItem(HANDOFF_KEY, JSON.stringify({ nonce: handoffNonce, at: handoffSince }));
+    } catch (e) { /* private mode: the poll still runs while this page lives */ }
+  }
+
+  function forgetHandoff() {
+    handoffNonce = null;
+    if (handoffTimer !== null) window.clearInterval(handoffTimer);
+    handoffTimer = null;
+    try { window.sessionStorage.removeItem(HANDOFF_KEY); } catch (e) { /* nothing kept */ }
+  }
+
+  /** A hand-off this tab started earlier (the sheet may have reloaded the page), or false. */
+  function resumeHandoff() {
+    try {
+      var kept = JSON.parse(window.sessionStorage.getItem(HANDOFF_KEY) || 'null');
+      if (!kept || !/^[A-Za-z0-9_-]{43}$/.test(String(kept.nonce))) return false;
+      if (!(Date.now() - Number(kept.at) < HANDOFF_FOR_MS)) return false;
+      handoffNonce = kept.nonce;
+      handoffSince = Number(kept.at);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function startHandoff() {
+    handoffNonce = makeNonce();
+    handoffSince = Date.now();
+    rememberHandoff();
+    waitForHandoff();
+    window.location.href = appLink(handoffNonce);
+  }
+
+  function waitForHandoff() {
+    show('v-handoff');
+    if (handoffTimer === null) handoffTimer = window.setInterval(pollHandoff, HANDOFF_EVERY_MS);
+  }
+
+  /** Ask the server for the app's answer; follow it only to Claude or ChatGPT. */
+  function pollHandoff() {
+    if (handoffNonce === null || handoffAsking) return;
+    if (Date.now() - handoffSince > HANDOFF_FOR_MS) {
+      forgetHandoff();
+      message('errExpired');
+      return;
+    }
+    handoffAsking = true;
+    window.fetch(HANDOFF_URL + '?nonce=' + encodeURIComponent(handoffNonce), {
+      method: 'GET',
+      cache: 'no-store',
+      credentials: 'omit',
+    }).then(function (res) {
+      return res.status === 200 ? res.json() : null;
+    }).then(function (body) {
+      handoffAsking = false;
+      var url = body && typeof body.redirect_url === 'string' ? body.redirect_url : null;
+      if (!url || handoffNonce === null) return;
+      forgetHandoff();
+      var app = trustedApp(url);
+      if (!app) {
+        message('errUntrusted');
+        return;
+      }
+      setTitle(app.name);
+      goBack(url, app);
+    }, function () {
+      handoffAsking = false;
+    });
+  }
+
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') pollHandoff();
+  });
+  window.addEventListener('focus', pollHandoff);
+  window.addEventListener('pageshow', pollHandoff);
+
+  $('handoff-btn').addEventListener('click', function () {
+    if (busy) return;
+    startHandoff();
+  });
+
+  $('handoff-again').addEventListener('click', function () {
+    if (handoffNonce === null) {
+      startHandoff();
+      return;
+    }
+    window.location.href = appLink(handoffNonce);
+  });
+
+  $('handoff-email').addEventListener('click', function () {
+    forgetHandoff();
+    showSignin();
+    $('email').focus();
+  });
 
   $('signin-form').addEventListener('submit', function (event) {
     event.preventDefault();

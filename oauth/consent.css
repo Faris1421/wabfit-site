@@ -163,3 +163,25 @@
 .oc .lead.ok {
   font-weight: 700;
 }
+
+/* «المتابعة عبر تطبيق wab»: the app hand-off, above the e-mail form on a phone. */
+.oc .handoff {
+  margin: 14px 0 4px;
+}
+
+.oc .or {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.oc .or::before,
+.oc .or::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
